@@ -1,0 +1,9 @@
+<div class="amarkal-metabox-field">
+    <div class="amarkal-metabox-field-label">
+        <label for="<?php echo $this->name ?>"><?php echo $this->title ?></label>
+        <p class="description"><?php echo $this->description ?></p>
+    </div>
+    <div class="amarkal-metabox-field-component">
+        <?php echo amarkal_ui_render($this->type,$this->get_model()); ?>
+    </div>
+</div>

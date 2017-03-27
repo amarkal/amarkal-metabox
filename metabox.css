@@ -1,0 +1,27 @@
+.amarkal-metabox-field {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #eeeeee;
+    padding: 15px 0;
+}
+
+.amarkal-metabox-field:last-child {
+    border-bottom: none;
+}
+
+.amarkal-metabox-field-label {
+    flex: 0 0 25%;
+    margin-right: 20px;
+}
+
+.amarkal-metabox-field-label label {
+    font-weight: 700;
+}
+
+.amarkal-metabox-field-label .description {
+    font-size: .9em;
+}
+
+.amarkal-metabox-field-component {
+    flex: 0 0 75%;
+}
