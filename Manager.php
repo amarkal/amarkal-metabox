@@ -118,7 +118,7 @@ class Manager
         }
  
         // Check the user's permissions.
-        if( isset($_POST['post_type']) && 'page' == $_POST['post_type'] ) 
+        if( isset($_POST['post_type']) && 'page' == filter_input(INPUT_POST, 'post_type') ) 
         {
             if( !current_user_can('edit_page', $post_id) ) return $post_id;
         } 
@@ -144,15 +144,18 @@ class Manager
     public function save_meta_box( $post_id, $id, $metabox )
     {
         $nonce_name = $id.'_nonce';
+        
         // Check if our nonce is set.
-        if ( !isset($_POST[$nonce_name]) ) {
+        if( !isset($_POST[$nonce_name]) ) 
+        {
             return $post_id;
         }
 
-        $nonce = $_POST[$nonce_name];
+        $nonce = filter_input(INPUT_POST, $nonce_name);
 
         // Verify that the nonce is valid.
-        if ( !wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
+        if ( !wp_verify_nonce($nonce, self::NONCE_ACTION) ) 
+        {
             return $post_id;
         }
         
@@ -200,7 +203,6 @@ class Manager
     private function default_args()
     {
         return array(
-            'id'       => null,
             'title'    => null,
             'screen'   => null,
             'context'  => 'advanced',
