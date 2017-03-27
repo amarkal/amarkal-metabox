@@ -116,15 +116,12 @@ class Manager
         {
             return $post_id;
         }
- 
+
         // Check the user's permissions.
-        if( array_key_exists('post_type', $_POST) && 'page' == filter_input(INPUT_POST, 'post_type') ) 
+        $post_type = filter_input(INPUT_POST, 'post_type');
+        if( null !== $post_type && !current_user_can('edit_'.$post_type, $post_id) )
         {
-            if( !current_user_can('edit_page', $post_id) ) return $post_id;
-        } 
-        else 
-        {
-            if( !current_user_can('edit_post', $post_id) ) return $post_id;
+            return $post_id;
         }
 
         // Update the meta fields.
@@ -143,18 +140,17 @@ class Manager
      */
     public function save_meta_box( $post_id, $id, $metabox )
     {
-        $nonce_name = $id.'_nonce';
+        $nonce_name  = $id.'_nonce';
+        $nonce_value = filter_input(INPUT_POST, $nonce_name);
         
         // Check if our nonce is set.
-        if( !array_key_exists($nonce_name, $_POST) ) 
+        if( null === $nonce_value ) 
         {
             return $post_id;
         }
 
-        $nonce = filter_input(INPUT_POST, $nonce_name);
-
         // Verify that the nonce is valid.
-        if ( !wp_verify_nonce($nonce, self::NONCE_ACTION) ) 
+        if ( !wp_verify_nonce($nonce_value, self::NONCE_ACTION) ) 
         {
             return $post_id;
         }
