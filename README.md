@@ -1,5 +1,5 @@
 # amarkal-metabox [![Build Status](https://scrutinizer-ci.com/g/askupasoftware/amarkal-metabox/badges/build.png?b=master)](https://scrutinizer-ci.com/g/askupasoftware/amarkal-metabox/build-status/master) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/askupasoftware/amarkal-metabox/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/askupasoftware/amarkal-metabox/?branch=master) [![License](https://img.shields.io/badge/license-GPL--3.0%2B-red.svg)](https://raw.githubusercontent.com/askupasoftware/amarkal-metabox/master/LICENSE)
-A set of utility functions for taxonomies in WordPress.
+A set of utility functions for creating WordPress metaboxes.
 
 **Tested up to:** WordPress 4.7  
 **Dependencies**: *[amarkal-ui](https://github.com/askupasoftware/amarkal-ui)*
@@ -76,7 +76,7 @@ amarkal_add_meta_box('my_meta_box', array(
     'priority'  => 'default',
     'fields'    => array(
     	array(
-        	'type'        => 'text',
+            'type'        => 'text',
             'title'       => 'Page Subtitle',
             'name'        => 'page_subtitle',
             'description' => 'The page\'s subtitle.'
