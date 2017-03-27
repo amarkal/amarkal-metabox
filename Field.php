@@ -16,7 +16,8 @@ extends \Amarkal\UI\AbstractComponent
     
     protected function on_created() 
     {
-//        $this->model['value'] = \get_term_meta($this->term_id, $this->name, true);
+        \get_post_meta( $this->post_id, $this->name, true );
+        $this->model['value'] = \get_post_meta( $this->post_id, $this->name, true );
     }
     
     public function get_template_path()

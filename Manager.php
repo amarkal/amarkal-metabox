@@ -18,6 +18,11 @@ class Manager
     private $metaboxes = array();
     
     /**
+     * Security nonce action
+     */
+    const NONCE_ACTION = 'amarkal_metabox';
+    
+    /**
      * Returns the *Singleton* instance of this class.
      *
      * @return Singleton The *Singleton* instance.
@@ -32,7 +37,14 @@ class Manager
         return static::$instance;
     }
     
-    public function add( $id, $args )
+    /**
+     * Add a metabox.
+     * 
+     * @param string $id
+     * @param array $args
+     * @throws \RuntimeException if the given metabox id has already been registered
+     */
+    public function add( $id, array $args )
     {
         if( !in_array($id, $this->metaboxes) )
         {
@@ -41,15 +53,27 @@ class Manager
         else throw new \RuntimeException("A metabox with id '$id' has already been registered.");
     }
     
+    /**
+     * Render a metabox.
+     * 
+     * @param WP_Post $post
+     * @param array $args
+     */
     public function render( $post, $args )
     {
-        foreach( $this->metaboxes[$args['id']]['fields'] as $field )
+        $metabox = $this->metaboxes[$args['id']];
+        wp_nonce_field(self::NONCE_ACTION, $args['id'].'_nonce');
+        foreach( $metabox['fields'] as $field )
         {
+            $field['post_id'] = $post->ID;
             $field_template = new Field($field);
             echo $field_template->render();
         }
     }
     
+    /**
+     * Internally used to register metaboxes.
+     */
     public function add_meta_boxes()
     {
         foreach( $this->metaboxes as $id => $args )
@@ -65,12 +89,84 @@ class Manager
         }
     }
     
-    public function save_meta_boxes()
+    /**
+     * Save metaboxes data for a given page.
+     * 
+     * @param number $post_id
+     */
+    public function save_meta_boxes( $post_id )
     {
-        
+        /**
+         * A note on security:
+         * 
+         * We need to verify this came from the our screen and with proper authorization,
+         * because save_post can be triggered at other times. since metaboxes can 
+         * be removed - by having a nonce field in only one metabox there is no 
+         * guarantee the nonce will be there. By placing a nonce field in each 
+         * metabox you can check if data from that metabox has been sent 
+         * (and is actually from where you think it is) prior to processing any data.
+         * @see http://wordpress.stackexchange.com/a/49460/25959
+         */
+ 
+        /*
+         * If this is an autosave, our form has not been submitted,
+         * so we don't want to do anything.
+         */
+        if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) 
+        {
+            return $post_id;
+        }
+ 
+        // Check the user's permissions.
+        if( isset($_POST['post_type']) && 'page' == $_POST['post_type'] ) 
+        {
+            if( !current_user_can('edit_page', $post_id) ) return $post_id;
+        } 
+        else 
+        {
+            if( !current_user_can('edit_post', $post_id) ) return $post_id;
+        }
+
+        // Update the meta fields.
+        foreach( $this->metaboxes as $id => $metabox )
+        {
+            $this->save_meta_box( $post_id, $id, $metabox );
+        }
     }
     
-    function print_style() 
+    /**
+     * Save the data of a single metabox.
+     * 
+     * @param number $post_id
+     * @param string $id
+     * @param array $metabox
+     */
+    public function save_meta_box( $post_id, $id, $metabox )
+    {
+        $nonce_name = $id.'_nonce';
+        // Check if our nonce is set.
+        if ( !isset($_POST[$nonce_name]) ) {
+            return $post_id;
+        }
+
+        $nonce = $_POST[$nonce_name];
+
+        // Verify that the nonce is valid.
+        if ( !wp_verify_nonce( $nonce, self::NONCE_ACTION ) ) {
+            return $post_id;
+        }
+        
+        foreach( $metabox['fields'] as $field )
+        {
+            $data = filter_input( INPUT_POST, $field['name'] );
+            \update_post_meta( $post_id, $field['name'], $data );
+        }
+    }
+    
+    /**
+     * Print custom metabox style.
+     */
+    public function print_style() 
     {
         $cs = get_current_screen();
         
@@ -86,6 +182,9 @@ class Manager
         }
     }
     
+    /**
+     * Initiate the metaboxes by adding action hooks for printing and saving.
+     */
     private function init()
     {
         \add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
@@ -93,6 +192,11 @@ class Manager
         \add_action( 'admin_footer', array( $this, 'print_style' ) );
     }
     
+    /**
+     * Default arguments for the add() method.
+     * 
+     * @return array
+     */
     private function default_args()
     {
         return array(
