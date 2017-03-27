@@ -23,7 +23,13 @@ define( 'AMARKAL_METABOX', true );
 
 if(!function_exists('amarkal_add_meta_box'))
 {
-    function amarkal_add_meta_box( $id, $args )
+    /**
+     * Add a meta box to a given post type
+     * 
+     * @param string $id
+     * @param array $args
+     */
+    function amarkal_add_meta_box( $id, array $args )
     {
         $mb = Amarkal\Metabox\Manager::get_instance();
         $mb->add( $id, $args );
