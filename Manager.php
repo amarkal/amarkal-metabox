@@ -118,7 +118,7 @@ class Manager
         }
  
         // Check the user's permissions.
-        if( isset($_POST['post_type']) && 'page' == filter_input(INPUT_POST, 'post_type') ) 
+        if( array_key_exists('post_type', $_POST) && 'page' == filter_input(INPUT_POST, 'post_type') ) 
         {
             if( !current_user_can('edit_page', $post_id) ) return $post_id;
         } 
@@ -146,7 +146,7 @@ class Manager
         $nonce_name = $id.'_nonce';
         
         // Check if our nonce is set.
-        if( !isset($_POST[$nonce_name]) ) 
+        if( !array_key_exists($nonce_name, $_POST) ) 
         {
             return $post_id;
         }
