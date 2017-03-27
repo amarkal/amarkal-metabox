@@ -32,9 +32,16 @@ class Manager
         if( null === static::$instance ) 
         {
             static::$instance = new static();
-            static::$instance->init();
         }
         return static::$instance;
+    }
+    
+    /**
+     * Private constructor to prevent instantiation
+     */
+    private function __construct() 
+    {
+        $this->init();
     }
     
     /**
@@ -143,14 +150,8 @@ class Manager
         $nonce_name  = $id.'_nonce';
         $nonce_value = filter_input(INPUT_POST, $nonce_name);
         
-        // Check if our nonce is set.
-        if( null === $nonce_value ) 
-        {
-            return $post_id;
-        }
-
-        // Verify that the nonce is valid.
-        if ( !wp_verify_nonce($nonce_value, self::NONCE_ACTION) ) 
+        // Check if our nonce is set and verify it
+        if( null === $nonce_value || !wp_verify_nonce($nonce_value, self::NONCE_ACTION) ) 
         {
             return $post_id;
         }
