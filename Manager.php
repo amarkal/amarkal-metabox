@@ -56,6 +56,7 @@ class Manager
         if( !in_array($id, $this->metaboxes) )
         {
             $this->metaboxes[$id] = array_merge($this->default_args(), $args);
+            $this->metaboxes[$id]['form'] = new \Amarkal\UI\Form($args['fields']);
         }
         else throw new \RuntimeException("A metabox with id '$id' has already been registered.");
     }
@@ -155,11 +156,10 @@ class Manager
         {
             return $post_id;
         }
-        
-        foreach( $metabox['fields'] as $field )
+
+        foreach( $this->get_form_data($metabox, $post_id) as $name => $value )
         {
-            $data = filter_input( INPUT_POST, $field['name'] );
-            \update_post_meta( $post_id, $field['name'], $data );
+            \update_post_meta( $post_id, $name, $value );
         }
     }
     
@@ -190,6 +190,29 @@ class Manager
         \add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
         \add_action( 'save_post', array( $this, 'save_meta_boxes' ) );
         \add_action( 'admin_footer', array( $this, 'print_style' ) );
+    }
+    
+    /**
+     * Get the updated data from the form of the given metabox.
+     * 
+     * @param array $metabox
+     * @param number $post_id
+     * @return array
+     */
+    private function get_form_data( $metabox, $post_id )
+    {
+        $old_instance = array();
+        $new_instance = filter_input_array(INPUT_POST);
+        
+        foreach( $metabox['fields'] as $field )
+        {
+            if( in_array($field['name'], get_post_custom_keys($post_id)) )
+            {
+                $old_instance[$field['name']] = \get_post_meta( $post_id, $field['name'], true );
+            }
+        }
+        
+        return $metabox['form']->update( $new_instance, $old_instance );
     }
     
     /**
