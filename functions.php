@@ -35,3 +35,21 @@ if(!function_exists('amarkal_add_meta_box'))
         $mb->add( $id, $args );
     }
 }
+
+if(!function_exists('amarkal_get_meta_box_value'))
+{
+    /**
+     * Get the value of the given field, optionally returning the default value
+     * if none was set.
+     * 
+     * @param string $metabox_id
+     * @param string $name
+     * @param number $post_id
+     * @return mix
+     */
+    function amarkal_get_meta_box_value( $metabox_id, $name, $post_id )
+    {
+        $mb = Amarkal\Metabox\Manager::get_instance();
+        return $mb->get_meta_box_value( $metabox_id, $name, $post_id );
+    }
+}

@@ -92,5 +92,22 @@ amarkal_add_meta_box('my_meta_box', array(
 ));
 
 // Then you can retrieve the data using:
-$subtitle = get_post_meta( $post_id, 'page_subtitle', true );
+$subtitle = amarkal_get_meta_box_value( 'my_meta_box', 'page_subtitle', $post_id );
+```
+
+### amarkal_get_meta_box_value
+*Get the value of a given field, optionally returning the default value if no value exists in the database.*
+```php
+amarkal_get_meta_box_value( $metabox_id, $name, $post_id )
+```
+This function can be used to retrieve the value of a given meta field and a post id. If there is no value in the database for the given meta field and post id, the default field value will be returned.
+
+**Parameters**  
+* `$metabox_id` (*String*) Specifies the metabox's ID.
+* `$name` (*String*)  Specifies the field's name.
+* `$post_id` (*Number*)  Specifies the post's ID.
+
+**Example Usage**
+```php
+$value = amarkal_get_meta_box_value( 'my_meta_box', 'field_name', $post_id );
 ```

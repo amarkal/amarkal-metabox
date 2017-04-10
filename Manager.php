@@ -171,6 +171,27 @@ class Manager
     }
     
     /**
+     * Get the value of the given field.
+     * 
+     * @param string $metabox_id
+     * @param string $name
+     * @param number $post_id
+     * @return mix
+     */
+    public function get_meta_box_value( $metabox_id, $name, $post_id )
+    {
+        // Check if the meta key exists
+        if( in_array($name, get_post_custom_keys($post_id)) )
+        {
+            return get_post_meta( $post_id, $name, true );
+        }
+        
+        // If no meta key exists in the db, use default value
+        $component = $this->metaboxes[$metabox_id]['form']->get_component($name);
+        return $component->default;
+    }
+    
+    /**
      * Print custom metabox style.
      */
     public function print_style() 
