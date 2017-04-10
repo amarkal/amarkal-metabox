@@ -1,0 +1,11 @@
+<?php foreach( $this->components as $component ): ?>
+    <div class="amarkal-metabox-field">
+        <div class="amarkal-metabox-field-label">
+            <label for="<?php echo $component->name ?>"><?php echo $component->title ?></label>
+            <p class="description"><?php echo $component->description ?></p>
+        </div>
+        <div class="amarkal-metabox-field-component">
+            <?php $component->render(true); ?>
+        </div>
+    </div>
+<?php endforeach; ?>

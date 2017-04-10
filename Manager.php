@@ -70,13 +70,22 @@ class Manager
     public function render( $post, $args )
     {
         $metabox = $this->metaboxes[$args['id']];
+        
+        // Print the errors from the previous processing
+        $this->print_errors($post->ID, $metabox);
+        
+        // Update component values before rendering
+        $this->update_form($metabox, $post->ID);
+        
+        // Render the metabox with a nonce
         wp_nonce_field(self::NONCE_ACTION, $args['id'].'_nonce');
-        foreach( $metabox['fields'] as $field )
-        {
-            $field['post_id'] = $post->ID;
-            $field_template = new Field($field);
-            echo $field_template->render();
-        }
+        
+        $template = new \Amarkal\UI\Template(
+            array('components' => $metabox['form']->get_components()),
+            __DIR__.'/Form.phtml'
+        );
+        
+        $template->render(true);
     }
     
     /**
@@ -148,8 +157,9 @@ class Manager
      */
     public function save_meta_box( $post_id, $id, $metabox )
     {
-        $nonce_name  = $id.'_nonce';
-        $nonce_value = filter_input(INPUT_POST, $nonce_name);
+        $nonce_name   = $id.'_nonce';
+        $nonce_value  = filter_input(INPUT_POST, $nonce_name);
+        $new_instance = filter_input_array(INPUT_POST);
         
         // Check if our nonce is set and verify it
         if( null === $nonce_value || !wp_verify_nonce($nonce_value, self::NONCE_ACTION) ) 
@@ -157,10 +167,7 @@ class Manager
             return $post_id;
         }
 
-        foreach( $this->get_form_data($metabox, $post_id) as $name => $value )
-        {
-            \update_post_meta( $post_id, $name, $value );
-        }
+        $this->update_form($metabox, $post_id, $new_instance);
     }
     
     /**
@@ -183,6 +190,28 @@ class Manager
     }
     
     /**
+     * Print all errors stored in a transient for a given post ID.
+     * 
+     * @param number $post_id
+     * @param array $metabox
+     */
+    public function print_errors( $post_id, $metabox )
+    {
+        $errors  = \get_transient("amarkal_metabox_errors_$post_id");
+        
+        if( $errors )
+        {
+            foreach( $errors as $name => $error )
+            {
+                $component = $metabox['form']->get_component($name);
+                echo "<div class=\"notice notice-error\"><p><strong>{$component->title}</strong> $error</p></div>";
+            }
+        }
+        
+        \delete_transient("amarkal_metabox_errors_$post_id");
+    }
+    
+    /**
      * Initiate the metaboxes by adding action hooks for printing and saving.
      */
     private function init()
@@ -193,16 +222,57 @@ class Manager
     }
     
     /**
-     * Get the updated data from the form of the given metabox.
+     * Update the form data for the given given metabox. If the $new_instance
+     * contains new data, it will be saved into the db and if there are any 
+     * validation errors they will be printed.
+     * 
+     * @param array $metabox
+     * @param number $post_id
+     * @param array $new_instance
+     */
+    private function update_form( $metabox, $post_id, array $new_instance = array() )
+    {
+        $old_instance   = $this->get_old_instance($metabox, $post_id);
+        $final_instance = $metabox['form']->update( $new_instance, $old_instance );
+
+        // Update db if there is new data to be saved
+        if( array() !== $new_instance )
+        {
+            $this->update_post_meta($final_instance, $post_id);
+            
+            /**
+             * We need to store all errors in a transient since WordPress does
+             * a redirect to post.php and then back to our post, which clears
+             * the execution thread. See https://www.sitepoint.com/displaying-errors-from-the-save_post-hook-in-wordpress/
+             */
+            \set_transient( "amarkal_metabox_errors_$post_id", $metabox['form']->get_errors(), 60 );
+        }
+    }
+    
+    /**
+     * Update post meta for the given post id
+     * 
+     * @param type $final_instance
+     * @param type $post_id
+     */
+    private function update_post_meta( $final_instance, $post_id )
+    {
+        foreach( $final_instance as $name => $value )
+        {
+            \update_post_meta( $post_id, $name, $value );
+        }
+    }
+    
+    /**
+     * Get existing meta values from the database.
      * 
      * @param array $metabox
      * @param number $post_id
      * @return array
      */
-    private function get_form_data( $metabox, $post_id )
+    private function get_old_instance( $metabox, $post_id )
     {
         $old_instance = array();
-        $new_instance = filter_input_array(INPUT_POST);
         
         foreach( $metabox['fields'] as $field )
         {
@@ -212,7 +282,7 @@ class Manager
             }
         }
         
-        return $metabox['form']->update( $new_instance, $old_instance );
+        return $old_instance;
     }
     
     /**
