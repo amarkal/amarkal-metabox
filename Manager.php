@@ -79,13 +79,7 @@ class Manager
         
         // Render the metabox with a nonce
         wp_nonce_field(self::NONCE_ACTION, $args['id'].'_nonce');
-        
-        $template = new \Amarkal\UI\Template(
-            array('components' => $metabox['form']->get_components()),
-            __DIR__.'/Form.phtml'
-        );
-        
-        $template->render(true);
+        include __DIR__.'/Form.phtml';
     }
     
     /**
@@ -113,39 +107,15 @@ class Manager
      */
     public function save_meta_boxes( $post_id )
     {
-        /**
-         * A note on security:
-         * 
-         * We need to verify this came from the our screen and with proper authorization,
-         * because save_post can be triggered at other times. since metaboxes can 
-         * be removed - by having a nonce field in only one metabox there is no 
-         * guarantee the nonce will be there. By placing a nonce field in each 
-         * metabox you can check if data from that metabox has been sent 
-         * (and is actually from where you think it is) prior to processing any data.
-         * @see http://wordpress.stackexchange.com/a/49460/25959
-         */
- 
-        /*
-         * If this is an autosave, our form has not been submitted,
-         * so we don't want to do anything.
-         */
-        if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) 
+        if($this->can_save($post_id))
         {
-            return $post_id;
+            // Update the meta fields.
+            foreach( $this->metaboxes as $id => $metabox )
+            {
+                $this->save_meta_box( $post_id, $id, $metabox );
+            }
         }
-
-        // Check the user's permissions.
-        $post_type = filter_input(INPUT_POST, 'post_type');
-        if( null !== $post_type && !current_user_can('edit_'.$post_type, $post_id) )
-        {
-            return $post_id;
-        }
-
-        // Update the meta fields.
-        foreach( $this->metaboxes as $id => $metabox )
-        {
-            $this->save_meta_box( $post_id, $id, $metabox );
-        }
+        return $post_id;
     }
     
     /**
@@ -282,6 +252,38 @@ class Manager
         {
             \update_post_meta( $post_id, $name, $value );
         }
+    }
+    
+    /**
+     * A note on security:
+     * 
+     * We need to verify this came from the our screen and with proper authorization,
+     * because save_post can be triggered at other times. since metaboxes can 
+     * be removed - by having a nonce field in only one metabox there is no 
+     * guarantee the nonce will be there. By placing a nonce field in each 
+     * metabox you can check if data from that metabox has been sent 
+     * (and is actually from where you think it is) prior to processing any data.
+     * @see http://wordpress.stackexchange.com/a/49460/25959
+     */
+    private function can_save( $post_id )
+    {
+        /*
+         * If this is an autosave, our form has not been submitted,
+         * so we don't want to do anything.
+         */
+        if( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) 
+        {
+            return false;
+        }
+
+        // Check the user's permissions.
+        $post_type = filter_input(INPUT_POST, 'post_type');
+        if( null !== $post_type && !current_user_can('edit_'.$post_type, $post_id) )
+        {
+            return false;
+        }
+        
+        return true;
     }
     
     /**
