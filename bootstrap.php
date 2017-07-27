@@ -16,4 +16,5 @@ if(false !== (require_once 'functions.php'))
 {
     // Load required classes if not using composer
     require_once 'Manager.php';
+    require_once 'Metabox.php';
 }
