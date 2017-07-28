@@ -29,23 +29,17 @@ class Metabox
     public $form;
 
     /**
-     * The list of metabox components.
-     *
-     * @var [\Amarkal\UI\ComponentList]
-     */
-    public $component_list;
-
-    /**
      * Security nonce action
      */
     const NONCE_ACTION = 'amarkal_metabox';
 
     public function __construct( $id, $args )
     {
-        $this->id = $id;
-        $this->config = array_merge($this->default_args(), $args);
-        $this->component_list = new \Amarkal\UI\ComponentList($this->config['fields']);
-        $this->form = new \Amarkal\UI\Form($this->component_list->get_value_components());
+        $this->id       = $id;
+        $this->config   = array_merge($this->default_args(), $args);
+        $this->form     = new \Amarkal\UI\Form(
+            new \Amarkal\UI\ComponentList($this->config['fields'])
+        );
     }
 
     /**
@@ -136,9 +130,10 @@ class Metabox
         
         if( $errors )
         {
+            $cl = $this->form->get_component_list();
             foreach( $errors as $name => $error )
             {
-                $component = $this->component_list->get_by_name($name);
+                $component = $cl->get_by_name($name);
                 echo "<div class=\"notice notice-error\"><p><strong>{$component->title}</strong> $error</p></div>";
             }
         }
@@ -157,7 +152,7 @@ class Metabox
         $old_instance = array();
         $pck = \get_post_custom_keys($post_id);
         
-        foreach( $this->component_list->get_value_components() as $comp )
+        foreach( $this->form->get_component_list()->get_value_components() as $comp )
         {
             $name = $comp->name;
             if( null !== $pck && in_array($name, $pck) )
@@ -185,7 +180,7 @@ class Metabox
             return $new_instance;
         }
 
-        foreach($this->component_list->get_value_components() as $c)
+        foreach($this->form->get_component_list()->get_value_components() as $c)
         {
             if(\array_key_exists($c->name, $data))
             {

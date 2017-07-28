@@ -1,5 +1,5 @@
 <?php wp_nonce_field(self::NONCE_ACTION, $this->id.'_nonce'); ?>
-<?php foreach( $this->component_list->get_all() as $component ): ?>
+<?php foreach( $this->form->get_component_list()->get_all() as $component ): ?>
     <div class="amarkal-metabox-field">
         <div class="amarkal-metabox-field-label">
             <label for="<?php echo $component->name ?>"><?php echo $component->title ?></label>

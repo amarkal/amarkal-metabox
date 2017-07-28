@@ -140,7 +140,7 @@ class Manager
         }
         
         // If no meta key exists in the db, use default value
-        $component = $this->metaboxes[$metabox_id]->component_list->get_by_name($name);
+        $component = $this->metaboxes[$metabox_id]->form->get_component_list()->get_by_name($name);
         return $component->default;
     }
     
