@@ -8,7 +8,7 @@
  * @package   amarkal-metabox
  * @depends   amarkal-ui
  * @author    Askupa Software <hello@askupasoftware.com>
- * @link      https://github.com/askupasoftware/amarkal-metabox
+ * @link      https://github.com/amarkal/amarkal-metabox
  * @copyright 2017 Askupa Software
  */
 
